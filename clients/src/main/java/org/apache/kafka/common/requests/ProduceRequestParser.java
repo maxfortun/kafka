@@ -16,28 +16,6 @@
  */
 package org.apache.kafka.common.requests;
 
-/*
-import org.apache.kafka.common.InvalidRecordException;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.errors.UnsupportedCompressionTypeException;
-import org.apache.kafka.common.message.ProduceResponseData;
-import org.apache.kafka.common.protocol.ApiKeys;
-import org.apache.kafka.common.protocol.Errors;
-import org.apache.kafka.common.record.BaseRecords;
-import org.apache.kafka.common.record.CompressionType;
-import org.apache.kafka.common.record.RecordBatch;
-import org.apache.kafka.common.record.Records;
-import org.apache.kafka.common.utils.Utils;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.apache.kafka.common.requests.ProduceResponse.INVALID_OFFSET;
-*/
-
 import java.nio.ByteBuffer;
 
 import org.apache.kafka.common.protocol.ByteBufferAccessor;
