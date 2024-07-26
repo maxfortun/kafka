@@ -18,6 +18,7 @@ package org.apache.kafka.common.requests;
 
 import org.apache.kafka.common.InvalidRecordException;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.InvalidConfigurationException;
 import org.apache.kafka.common.errors.UnsupportedCompressionTypeException;
 import org.apache.kafka.common.message.ProduceRequestData;
 import org.apache.kafka.common.message.ProduceResponseData;
@@ -69,8 +70,9 @@ public class ProduceRequest extends AbstractRequest {
 
             produceRequestParser = (ProduceRequestParser) Class.forName(produceRequestParserClassName).getConstructor().newInstance();
         } catch (Exception e) {
-            log.error("Failed to initialize {}", produceRequestParserClassName, e);
-            throw new ExceptionInInitializerError(e);
+            String message = "Failed to initialize "+produceRequestParserClassName;
+            log.error(message, e);
+            throw new InvalidConfigurationException(message, e);
         }
     };
 
