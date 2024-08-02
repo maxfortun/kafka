@@ -44,7 +44,7 @@ public class TransformingProduceRequestParser implements ProduceRequestParser {
 
     public TransformingProduceRequestParser() {
         try {
-            String[] byteBufferTransformerNames = resources.getString("byteBufferTransformers").split("[\\s,;]*");
+            String[] byteBufferTransformerNames = resources.getString("byteBufferTransformers").split("[\\s,;]+");
             for (String byteBufferTransformerName : byteBufferTransformerNames) {
                 byteBufferTransformers.add((ByteBufferTransformer) getTransformer("byteBufferTransformer." + byteBufferTransformerName));
             }
