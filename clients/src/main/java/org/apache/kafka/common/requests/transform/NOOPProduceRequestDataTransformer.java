@@ -16,8 +16,16 @@
  */
 package org.apache.kafka.common.requests.transform;
 
-import java.nio.ByteBuffer;
+import org.apache.kafka.common.message.ProduceRequestData;
 
-public interface ByteBufferTransformer {
-    public ByteBuffer transform(ByteBuffer byteBuffer, short version);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTransformer {
+    public static final Logger log = LoggerFactory.getLogger(NOOPProduceRequestDataTransformer.class);
+
+    public ProduceRequestData transform(ProduceRequestData produceRequestData, short version) {
+        log.trace("Returning data as-is {}", produceRequestData);
+        return produceRequestData;
+    }
 }

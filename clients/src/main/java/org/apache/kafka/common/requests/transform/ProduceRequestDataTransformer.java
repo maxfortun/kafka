@@ -16,8 +16,8 @@
  */
 package org.apache.kafka.common.requests.transform;
 
-import java.nio.ByteBuffer;
+import org.apache.kafka.common.message.ProduceRequestData;
 
-public interface ByteBufferTransformer {
-    public ByteBuffer transform(ByteBuffer byteBuffer, short version);
+public interface ProduceRequestDataTransformer {
+    public ProduceRequestData transform(ProduceRequestData produceRequestData, short version);
 }

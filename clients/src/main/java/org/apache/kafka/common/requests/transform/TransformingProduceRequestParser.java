@@ -40,12 +40,18 @@ public class TransformingProduceRequestParser implements ProduceRequestParser {
 
     private ResourceBundle resources = ResourceBundle.getBundle("TransformingProduceRequestParser");
     private Collection<ByteBufferTransformer> byteBufferTransformers = new ArrayList<>();
+    private Collection<ProduceRequestDataTransformer> produceRequestDataTransformers = new ArrayList<>();
 
     public TransformingProduceRequestParser() {
         try {
-            String[] transformerNames = resources.getString("byteBufferTransformers").split("[\\s,;]*");
-            for (String transformerName : transformerNames) {
-                byteBufferTransformers.add(getByteBufferTransformer("byteBufferTransformer." + transformerName));
+            String[] byteBufferTransformerNames = resources.getString("byteBufferTransformers").split("[\\s,;]*");
+            for (String byteBufferTransformerName : byteBufferTransformerNames) {
+                byteBufferTransformers.add((ByteBufferTransformer) getTransformer("byteBufferTransformer." + byteBufferTransformerName));
+            }
+
+            String[] produceRequestDataTransformerNames = resources.getString("produceRequestDataTransformers").split("[\\s,;]*");
+            for (String produceRequestDataTransformerName : produceRequestDataTransformerNames) {
+                produceRequestDataTransformers.add((ProduceRequestDataTransformer) getTransformer("produceRequestDataTransformer." + produceRequestDataTransformerName));
             }
         } catch (Exception e) {
             String message = "Failed to initialize";
@@ -54,22 +60,30 @@ public class TransformingProduceRequestParser implements ProduceRequestParser {
         }
     }
 
-    private ByteBufferTransformer getByteBufferTransformer(String transformerName) throws Exception {
+    private Object getTransformer(String transformerName) throws Exception {
         String transformerClassName = resources.getString(transformerName + ".class");
+
         Class<?> transformerClass = Class.forName(transformerClassName);
         Constructor<?> transformerConstructor = transformerClass.getConstructor(transformerConstructorParameterTypes);
+
         if (null != transformerConstructor) {
-            return (ByteBufferTransformer) transformerConstructor.newInstance(new Object[] {resources, transformerName});
+            return transformerConstructor.newInstance(new Object[] {resources, transformerName});
         }
 
         transformerConstructor = transformerClass.getConstructor();
-        return (ByteBufferTransformer) transformerConstructor.newInstance();
+        return transformerConstructor.newInstance();
     }
 
-    public ProduceRequest parse(ByteBuffer buffer, short version) {
+    public ProduceRequest parse(ByteBuffer byteBuffer, short version) {
         for (ByteBufferTransformer byteBufferTransformer : byteBufferTransformers) {
-            buffer = byteBufferTransformer.transform(buffer, version);
+            byteBuffer = byteBufferTransformer.transform(byteBuffer, version);
         }
-        return new ProduceRequest(new ProduceRequestData(new ByteBufferAccessor(buffer), version), version);
+
+        ProduceRequestData produceRequestData = new ProduceRequestData(new ByteBufferAccessor(byteBuffer), version);
+        for (ProduceRequestDataTransformer produceRequestDataTransformer : produceRequestDataTransformers) {
+            produceRequestData = produceRequestDataTransformer.transform(produceRequestData, version);
+        }
+
+        return new ProduceRequest(produceRequestData, version);
     }
 }
