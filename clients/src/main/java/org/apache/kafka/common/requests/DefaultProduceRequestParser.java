@@ -18,6 +18,11 @@ package org.apache.kafka.common.requests;
 
 import java.nio.ByteBuffer;
 
-public interface ProduceRequestParser {
-    public ProduceRequest parse(ByteBuffer buffer, short version);
+import org.apache.kafka.common.protocol.ByteBufferAccessor;
+import org.apache.kafka.common.message.ProduceRequestData;
+
+public class DefaultProduceRequestParser implements ProduceRequestParser {
+    public ProduceRequest parse(ByteBuffer buffer, short version) {
+        return new ProduceRequest(new ProduceRequestData(new ByteBufferAccessor(buffer), version), version);
+    }
 }

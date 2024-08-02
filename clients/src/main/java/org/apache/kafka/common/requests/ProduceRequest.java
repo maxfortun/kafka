@@ -47,7 +47,7 @@ public class ProduceRequest extends AbstractRequest {
 
     public static final String PRODUCE_REQUEST_PARSER_PROPERTY = "org.apache.kafka.common.requests.ProduceRequestParser";
     public static final String PRODUCE_REQUEST_PARSER_ENV = "KAFKA_PRODUCE_REQUEST_PARSER";
-    public static final String PRODUCE_REQUEST_PARSER_DEFAULT = "org.apache.kafka.common.requests.ProduceRequestParser";
+    public static final String PRODUCE_REQUEST_PARSER_DEFAULT = "org.apache.kafka.common.requests.DefaultProduceRequestParser";
 
     private static ProduceRequestParser produceRequestParser = null;
     static {
@@ -70,7 +70,7 @@ public class ProduceRequest extends AbstractRequest {
 
             produceRequestParser = (ProduceRequestParser) Class.forName(produceRequestParserClassName).getConstructor().newInstance();
         } catch (Exception e) {
-            String message = "Failed to initialize "+produceRequestParserClassName;
+            String message = "Failed to initialize " + produceRequestParserClassName;
             log.error(message, e);
             throw new InvalidConfigurationException(message, e);
         }
