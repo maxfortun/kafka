@@ -24,8 +24,14 @@ import org.slf4j.LoggerFactory;
 public class NOOPByteBufferTransformer implements ByteBufferTransformer {
     public static final Logger log = LoggerFactory.getLogger(NOOPByteBufferTransformer.class);
 
+    private String transformerName;
+
+    public NOOPByteBufferTransformer(String transformerName) {
+        this.transformerName = transformerName;
+    }
+
     public ByteBuffer transform(ByteBuffer byteBuffer, short version) {
-        log.trace("Returning buffer as-is {}", byteBuffer);
+        log.trace("{}: Returning buffer as-is {}", transformerName, byteBuffer);
         return byteBuffer;
     }
 }

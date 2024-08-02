@@ -24,8 +24,14 @@ import org.slf4j.LoggerFactory;
 public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTransformer {
     public static final Logger log = LoggerFactory.getLogger(NOOPProduceRequestDataTransformer.class);
 
+    private String transformerName;
+
+    public NOOPProduceRequestDataTransformer(String transformerName) {
+        this.transformerName = transformerName;
+    }
+
     public ProduceRequestData transform(ProduceRequestData produceRequestData, short version) {
-        log.trace("Returning data as-is {}", produceRequestData);
+        log.trace("{}: Returning data as-is {}", transformerName, produceRequestData);
         return produceRequestData;
     }
 }

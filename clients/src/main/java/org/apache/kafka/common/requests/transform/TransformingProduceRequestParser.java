@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class TransformingProduceRequestParser implements ProduceRequestParser {
     public static final Logger log = LoggerFactory.getLogger(TransformingProduceRequestParser.class);
 
-    private static Class[] transformerConstructorParameterTypes = new Class[] {ResourceBundle.class, String.class};
+    private static Class[] transformerConstructorParameterTypes = new Class[] {String.class};
 
     private ResourceBundle resources = ResourceBundle.getBundle("TransformingProduceRequestParser");
     private Collection<ByteBufferTransformer> byteBufferTransformers = new ArrayList<>();
@@ -65,13 +65,7 @@ public class TransformingProduceRequestParser implements ProduceRequestParser {
 
         Class<?> transformerClass = Class.forName(transformerClassName);
         Constructor<?> transformerConstructor = transformerClass.getConstructor(transformerConstructorParameterTypes);
-
-        if (null != transformerConstructor) {
-            return transformerConstructor.newInstance(new Object[] {resources, transformerName});
-        }
-
-        transformerConstructor = transformerClass.getConstructor();
-        return transformerConstructor.newInstance();
+        return transformerConstructor.newInstance(new Object[] {transformerName});
     }
 
     public ProduceRequest parse(ByteBuffer byteBuffer, short version) {
