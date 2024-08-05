@@ -16,7 +16,10 @@
  */
 package org.apache.kafka.common.requests.transform;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.kafka.common.message.ProduceRequestData;
+import org.apache.kafka.common.protocol.types.RawTaggedField;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +34,14 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
     }
 
     public ProduceRequestData transform(ProduceRequestData produceRequestData, short version) {
-        log.trace("{}: Returning data as-is {}", transformerName, produceRequestData);
+        if (log.isTraceEnabled()) {
+            log.trace("{}: Returning data as-is {}", transformerName, produceRequestData);
+            for (RawTaggedField rawTaggedField : produceRequestData.unknownTaggedFields()) {
+                log.trace("{}: ... {} = {}", transformerName, rawTaggedField.tag(), new String(rawTaggedField.data(), StandardCharsets.UTF_8));
+            }
+        } else {
+            log.debug("{}: Returning data as-is {}", transformerName, produceRequestData);
+        }
         return produceRequestData;
     }
 }
