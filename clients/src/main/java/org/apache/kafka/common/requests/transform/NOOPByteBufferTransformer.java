@@ -32,11 +32,13 @@ public class NOOPByteBufferTransformer implements ByteBufferTransformer {
     }
 
     public ByteBuffer transform(ByteBuffer byteBuffer, short version) {
+        buffer.mark();
         if (log.isTraceEnabled()) {
             log.trace("{}: Returning buffer as-is {}", transformerName, StandardCharsets.UTF_8.decode(byteBuffer).toString());
         } else {
             log.debug("{}: Returning buffer as-is {}", transformerName, byteBuffer);
         }
+        byteBuffer.reset();
         return byteBuffer;
     }
 }
