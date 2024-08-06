@@ -37,7 +37,11 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
         if (log.isTraceEnabled()) {
             log.trace("{}: Returning data as-is {}", transformerName, produceRequestData);
             for (RawTaggedField rawTaggedField : produceRequestData.unknownTaggedFields()) {
-                log.trace("{}: ... {} = {}", transformerName, rawTaggedField.tag(), new String(rawTaggedField.data(), StandardCharsets.UTF_8));
+                log.trace("{}: rawTaggedField {} = {}", transformerName, rawTaggedField.tag(), new String(rawTaggedField.data(), StandardCharsets.UTF_8));
+            }
+
+            for(ProduceRequestData.TopicProduceData topicProduceData : produceRequestData.topicData()) {
+                log.trace("{}: topicProduceData {}", transformerName, topicProduceData);
             }
         } else {
             log.debug("{}: Returning data as-is {}", transformerName, produceRequestData);
