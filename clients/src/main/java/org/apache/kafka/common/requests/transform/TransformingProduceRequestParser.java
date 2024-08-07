@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ResourceBundle;
+import java.util.MissingResourceException;
 
 import java.nio.ByteBuffer;
 
@@ -44,15 +45,19 @@ public class TransformingProduceRequestParser implements ProduceRequestParser {
 
     public TransformingProduceRequestParser() {
         try {
-            String[] byteBufferTransformerNames = resources.getString("byteBufferTransformers").split("[\\s,;]+");
-            for (String byteBufferTransformerName : byteBufferTransformerNames) {
-                byteBufferTransformers.add((ByteBufferTransformer) getTransformer("byteBufferTransformer." + byteBufferTransformerName));
-            }
+            try {
+                String[] byteBufferTransformerNames = resources.getString("byteBufferTransformers").split("[\\s,;]+");
+                for (String byteBufferTransformerName : byteBufferTransformerNames) {
+                    byteBufferTransformers.add((ByteBufferTransformer) getTransformer("byteBufferTransformer." + byteBufferTransformerName));
+                }
+            } catch(MissingResourceException mre) {}
 
-            String[] produceRequestDataTransformerNames = resources.getString("produceRequestDataTransformers").split("[\\s,;]+");
-            for (String produceRequestDataTransformerName : produceRequestDataTransformerNames) {
-                produceRequestDataTransformers.add((ProduceRequestDataTransformer) getTransformer("produceRequestDataTransformer." + produceRequestDataTransformerName));
-            }
+            try {
+                String[] produceRequestDataTransformerNames = resources.getString("produceRequestDataTransformers").split("[\\s,;]+");
+                for (String produceRequestDataTransformerName : produceRequestDataTransformerNames) {
+                    produceRequestDataTransformers.add((ProduceRequestDataTransformer) getTransformer("produceRequestDataTransformer." + produceRequestDataTransformerName));
+                }
+            } catch(MissingResourceException mre) {}
         } catch (Exception e) {
             String message = "Failed to initialize";
             log.error(message, e);
