@@ -42,9 +42,9 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
 
             for(ProduceRequestData.TopicProduceData topicProduceData : produceRequestData.topicData()) {
                 log.trace("{}: topicProduceData {}", transformerName, topicProduceData);
-                // List<PartitionProduceData> partitionData = topicProduceData.partitionData();
                 for(ProduceRequestData.PartitionProduceData partitionProduceData : topicProduceData.partitionData()) {
-                    log.trace("{}: topicProduceData.partitionData {}", transformerName, topicProduceData);
+                    log.trace("{}: topicProduceData.partitionData {}", transformerName, partitionProduceData);
+                    log.trace("{}: topicProduceData.partitionData.records {}", transformerName, partitionProduceData.records());
                 }
             }
         } else {
