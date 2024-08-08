@@ -53,6 +53,9 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
                     for(Iterator<? extends RecordBatch> i = ((MemoryRecords)partitionProduceData.records()).batchIterator(); i.hasNext(); ) {
                         RecordBatch recordBatch = i.next();
                         log.trace("{}: topicProduceData.partitionData.recordBatch {} : {}", transformerName, recordBatch);
+                        for(Record record : recordBatch) {
+                            log.trace("{}: topicProduceData.partitionData.recordBatch.record {} : {}", transformerName, record);
+                        }
                     }
                 }
             }
