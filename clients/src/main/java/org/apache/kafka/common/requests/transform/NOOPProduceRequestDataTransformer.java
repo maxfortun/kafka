@@ -16,6 +16,7 @@
  */
 package org.apache.kafka.common.requests.transform;
 
+import java.util.Iterator;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.kafka.common.message.ProduceRequestData;
@@ -49,7 +50,7 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
                     log.trace("{}: topicProduceData.partitionData {} : {}", transformerName, partitionProduceData,
                         StandardCharsets.UTF_8.decode(((MemoryRecords)(partitionProduceData.records())).buffer()).toString());
 
-                    for(Iterator<? extends RecordBatch> i = partitionProduceData.records().batchIterator(); i.hasNext(); ) {
+                    for(Iterator<? extends RecordBatch> i = ((MemoryRecords)partitionProduceData.records()).batchIterator(); i.hasNext(); ) {
                         RecordBatch recordBatch = i.next();
                         log.trace("{}: topicProduceData.partitionData.recordBatch {} : {}", transformerName, recordBatch);
                     }
