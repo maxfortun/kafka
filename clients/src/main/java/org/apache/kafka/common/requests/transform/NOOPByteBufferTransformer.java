@@ -22,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.kafka.common.requests.RequestHeader;
+
 public class NOOPByteBufferTransformer implements ByteBufferTransformer {
     public static final Logger log = LoggerFactory.getLogger(NOOPByteBufferTransformer.class);
 
@@ -34,7 +36,8 @@ public class NOOPByteBufferTransformer implements ByteBufferTransformer {
     public ByteBuffer transform(ByteBuffer byteBuffer, short version) {
         byteBuffer.mark();
         if (log.isTraceEnabled()) {
-            log.trace("{}: Returning buffer as-is {}", transformerName, StandardCharsets.UTF_8.decode(byteBuffer).toString());
+            RequestHeader requestHeader = RequestHeader.parse(byteBuffer);
+            log.trace("{}: Returning buffer as-is {} {}", transformerName, requestHeader, StandardCharsets.UTF_8.decode(byteBuffer).toString());
         } else {
             log.debug("{}: Returning buffer as-is {}", transformerName, byteBuffer);
         }
