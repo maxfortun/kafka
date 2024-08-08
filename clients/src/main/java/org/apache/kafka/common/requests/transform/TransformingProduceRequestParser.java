@@ -74,14 +74,20 @@ public class TransformingProduceRequestParser implements ProduceRequestParser {
     }
 
     public ProduceRequest parse(ByteBuffer byteBuffer, short version) {
+        log.trace("byteBuffer in: {}", byteBuffer);
         for (ByteBufferTransformer byteBufferTransformer : byteBufferTransformers) {
             byteBuffer = byteBufferTransformer.transform(byteBuffer, version);
         }
+        log.trace("byteBuffer out: {}", byteBuffer);
 
         ProduceRequestData produceRequestData = new ProduceRequestData(new ByteBufferAccessor(byteBuffer), version);
+        log.trace("produceRequestData in: {}", produceRequestData);
+
         for (ProduceRequestDataTransformer produceRequestDataTransformer : produceRequestDataTransformers) {
             produceRequestData = produceRequestDataTransformer.transform(produceRequestData, version);
         }
+
+        log.trace("produceRequestData out: {}", produceRequestData);
 
         return new ProduceRequest(produceRequestData, version);
     }

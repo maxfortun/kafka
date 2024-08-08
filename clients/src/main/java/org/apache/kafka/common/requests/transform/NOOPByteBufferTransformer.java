@@ -34,7 +34,8 @@ public class NOOPByteBufferTransformer implements ByteBufferTransformer {
     }
 
     public ByteBuffer transform(ByteBuffer byteBuffer, short version) {
-        byteBuffer.mark();
+        int prevPosition = byteBuffer.position();
+
         if (log.isTraceEnabled()) {
             try {
                 RequestHeader requestHeader = RequestHeader.parse(byteBuffer);
@@ -45,7 +46,8 @@ public class NOOPByteBufferTransformer implements ByteBufferTransformer {
         } else {
             log.debug("{}: Returning buffer as-is {}", transformerName, byteBuffer);
         }
-        byteBuffer.reset();
+
+        byteBuffer.position(prevPosition);
         return byteBuffer;
     }
 }
