@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.kafka.common.message.ProduceRequestData;
 import org.apache.kafka.common.protocol.types.RawTaggedField;
+import org.apache.kafka.common.record.Records;
 import org.apache.kafka.common.record.MemoryRecords;
 
 import org.slf4j.Logger;
@@ -46,6 +47,9 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
                 for(ProduceRequestData.PartitionProduceData partitionProduceData : topicProduceData.partitionData()) {
                     log.trace("{}: topicProduceData.partitionData {} : {}", transformerName, partitionProduceData,
                         StandardCharsets.UTF_8.decode(((MemoryRecords)(partitionProduceData.records())).buffer()).toString());
+                    for(Records records : partitionProduceData.records()) {
+                        log.trace("{}: topicProduceData.partitionData.records {} : {}", transformerName, records);
+                    }
                 }
             }
         } else {

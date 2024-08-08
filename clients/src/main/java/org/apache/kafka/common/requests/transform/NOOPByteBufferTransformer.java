@@ -37,12 +37,7 @@ public class NOOPByteBufferTransformer implements ByteBufferTransformer {
         int prevPosition = byteBuffer.position();
 
         if (log.isTraceEnabled()) {
-            try {
-                RequestHeader requestHeader = RequestHeader.parse(byteBuffer);
-                log.trace("{}: Returning buffer as-is {} {}", transformerName, requestHeader, StandardCharsets.UTF_8.decode(byteBuffer).toString());
-            } catch(Exception e) {
-                log.trace("{}: Returning buffer as-is {} {}", transformerName, StandardCharsets.UTF_8.decode(byteBuffer).toString(), e);
-            }
+            log.trace("{}: Returning buffer as-is {} {}", transformerName, StandardCharsets.UTF_8.decode(byteBuffer).toString(), e);
         } else {
             log.debug("{}: Returning buffer as-is {}", transformerName, byteBuffer);
         }
