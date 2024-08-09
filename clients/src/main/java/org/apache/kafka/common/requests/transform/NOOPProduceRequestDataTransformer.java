@@ -50,9 +50,7 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
     private static String toString(Header[] headers) {
         StringBuffer stringBuffer = new StringBuffer();
         for(Header header : headers) {
-            if(stringBuffer.length() > 0) {
-                stringBuffer.append("\n");
-            }
+            stringBuffer.append("  H:");
             stringBuffer.append(header.key());
             stringBuffer.append("=");
             stringBuffer.append(new String(header.value(), StandardCharsets.UTF_8));
@@ -74,7 +72,7 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
                         RecordBatch recordBatch = iter.next();
                         int recordId = 0;
                         for (Record record : recordBatch) {
-                            log.trace("{}: topicProduceData.partitionData.recordBatch[{}].record[{}]:\n{}\n{}={}",
+                            log.trace("{}: topicProduceData.partitionData.recordBatch[{}].record[{}]:\n{}  B:{}={}",
                                 transformerName, batchId, recordId++,
                                 toString(record.headers()), toString(record.key()), toString(record.value())
                             );
