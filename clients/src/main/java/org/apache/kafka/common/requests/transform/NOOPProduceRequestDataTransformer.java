@@ -18,6 +18,7 @@ package org.apache.kafka.common.requests.transform;
 
 import java.util.Iterator;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 
 import org.apache.kafka.common.message.ProduceRequestData;
 import org.apache.kafka.common.protocol.types.RawTaggedField;
@@ -25,6 +26,7 @@ import org.apache.kafka.common.record.Record;
 import org.apache.kafka.common.record.RecordBatch;
 import org.apache.kafka.common.record.Records;
 import org.apache.kafka.common.record.MemoryRecords;
+import org.apache.kafka.common.header.Header;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +38,26 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
 
     public NOOPProduceRequestDataTransformer(String transformerName) {
         this.transformerName = transformerName;
+    }
+
+    private static String toString(ByteBuffer byteBuffer) {
+        if(null == byteBuffer) {
+            return null;
+        }
+        return StandardCharsets.UTF_8.decode(byteBuffer).toString();
+    }
+
+    private static String toString(Header[] headers) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for(Header header : headers) {
+            if(stringBuffer.length() > 0) {
+                stringBuffer.append("\n");
+            }
+            stringBuffer.append(header.key());
+            stringBuffer.append("=");
+            stringBuffer.append(new String(header.value(), StandardCharsets.UTF_8));
+        }
+        return stringBuffer.toString();
     }
 
     public ProduceRequestData transform(ProduceRequestData produceRequestData, short version) {
@@ -50,11 +72,11 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
                     int batchId = 0;
                     for (Iterator<? extends RecordBatch> iter = ((MemoryRecords)partitionProduceData.records()).batchIterator(); iter.hasNext(); batchId++) {
                         RecordBatch recordBatch = iter.next();
-						int recordId = 0;
+                        int recordId = 0;
                         for (Record record : recordBatch) {
                             log.trace("{}: topicProduceData.partitionData.recordBatch[{}].record[{}]:\n{}\n{}={}",
                                 transformerName, batchId, recordId++,
-                                record.headers(), record.key(), record.value()
+                                toString(record.headers()), toString(record.key()), toString(record.value())
                             );
                         }
                     }
