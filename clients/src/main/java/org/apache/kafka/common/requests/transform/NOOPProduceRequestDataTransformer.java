@@ -45,17 +45,17 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
                 log.trace("{}: rawTaggedField {} = {}", transformerName, rawTaggedField.tag(), new String(rawTaggedField.data(), StandardCharsets.UTF_8));
             }
 
-            for(ProduceRequestData.TopicProduceData topicProduceData : produceRequestData.topicData()) {
-                log.trace("{}: topicProduceData {}", transformerName, topicProduceData);
-                for(ProduceRequestData.PartitionProduceData partitionProduceData : topicProduceData.partitionData()) {
-                    log.trace("{}: topicProduceData.partitionData {} : {}", transformerName, partitionProduceData,
-                        StandardCharsets.UTF_8.decode(((MemoryRecords)(partitionProduceData.records())).buffer()).toString());
-
-                    for(Iterator<? extends RecordBatch> i = ((MemoryRecords)partitionProduceData.records()).batchIterator(); i.hasNext(); ) {
-                        RecordBatch recordBatch = i.next();
-                        log.trace("{}: topicProduceData.partitionData.recordBatch {} : {}", transformerName, recordBatch);
-                        for(Record record : recordBatch) {
-                            log.trace("{}: topicProduceData.partitionData.recordBatch.record {} : {}", transformerName, record);
+            for (ProduceRequestData.TopicProduceData topicProduceData : produceRequestData.topicData()) {
+                for (ProduceRequestData.PartitionProduceData partitionProduceData : topicProduceData.partitionData()) {
+                    int batchId = 0;
+                    for (Iterator<? extends RecordBatch> iter = ((MemoryRecords)partitionProduceData.records()).batchIterator(); iter.hasNext(); batchId++) {
+                        RecordBatch recordBatch = iter.next();
+						int recordId = 0;
+                        for (Record record : recordBatch) {
+                            log.trace("{}: topicProduceData.partitionData.recordBatch[{}].record[{}]:\n{}\n{}={}",
+                                transformerName, batchId, recordId++,
+                                record.headers(), record.key(), record.value()
+                            );
                         }
                     }
                 }
