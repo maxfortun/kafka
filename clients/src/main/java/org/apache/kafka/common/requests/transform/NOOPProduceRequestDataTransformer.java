@@ -54,6 +54,7 @@ public class NOOPProduceRequestDataTransformer implements ProduceRequestDataTran
             stringBuffer.append(header.key());
             stringBuffer.append("=");
             stringBuffer.append(new String(header.value(), StandardCharsets.UTF_8));
+            stringBuffer.append("\n");
         }
         return stringBuffer.toString();
     }
