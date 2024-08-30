@@ -18,7 +18,6 @@ package org.apache.kafka.common.requests;
 
 import org.apache.kafka.common.InvalidRecordException;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.errors.InvalidConfigurationException;
 import org.apache.kafka.common.errors.UnsupportedCompressionTypeException;
 import org.apache.kafka.common.message.ProduceRequestData;
 import org.apache.kafka.common.message.ProduceResponseData;
@@ -45,36 +44,7 @@ import org.slf4j.LoggerFactory;
 public class ProduceRequest extends AbstractRequest {
     public static final Logger log = LoggerFactory.getLogger(ProduceRequest.class);
 
-    public static final String PRODUCE_REQUEST_PARSER_PROPERTY = "org.apache.kafka.common.requests.ProduceRequestParser";
-    public static final String PRODUCE_REQUEST_PARSER_ENV = "KAFKA_PRODUCE_REQUEST_PARSER";
-    public static final String PRODUCE_REQUEST_PARSER_DEFAULT = "org.apache.kafka.common.requests.DefaultProduceRequestParser";
-
-    private static ProduceRequestParser produceRequestParser = null;
-    static {
-        String produceRequestParserClassName = null;
-        try {
-            produceRequestParserClassName = System.getProperty(PRODUCE_REQUEST_PARSER_PROPERTY);
-
-            if (null != produceRequestParserClassName) {
-                log.debug("ProduceRequestParser class {} from system property {}", produceRequestParserClassName, PRODUCE_REQUEST_PARSER_PROPERTY);
-            } else {
-                produceRequestParserClassName = System.getenv(PRODUCE_REQUEST_PARSER_ENV);
-            }
-
-            if (null != produceRequestParserClassName) {
-                log.debug("ProduceRequestParser class {} from env {}", produceRequestParserClassName, PRODUCE_REQUEST_PARSER_ENV);
-            } else {
-                produceRequestParserClassName = PRODUCE_REQUEST_PARSER_DEFAULT;
-                log.debug("ProduceRequestParser class {} default {}", produceRequestParserClassName, PRODUCE_REQUEST_PARSER_DEFAULT);
-            }
-
-            produceRequestParser = (ProduceRequestParser) Class.forName(produceRequestParserClassName).getConstructor().newInstance();
-        } catch (Exception e) {
-            String message = "Failed to initialize " + produceRequestParserClassName;
-            log.error(message, e);
-            throw new InvalidConfigurationException(message, e);
-        }
-    };
+    private static ProduceRequestParser produceRequestParser = ProduceRequestParserFactory.getProduceRequestParser();
 
     public static Builder forMagic(byte magic, ProduceRequestData data) {
         // Message format upgrades correspond with a bump in the produce request version. Older
