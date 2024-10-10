@@ -93,12 +93,14 @@ public class ProducerPerformance {
 
             /* setup perf test */
             List<Header> headers = new ArrayList<>();
-            for(String headerString : headersList) {
-                String[] headerTokens = headerString.split("[\\s=]+", 2);
-                if(headerTokens.length < 2) {
-                    throw new IllegalArgumentException("invalid headers provided");
+            if(null != headersList) {
+                for(String headerString : headersList) {
+                    String[] headerTokens = headerString.split("[\\s=]+", 2);
+                    if(headerTokens.length < 2) {
+                        throw new IllegalArgumentException("invalid headers provided");
+                    }
+                    headers.add(new RecordHeader(headerTokens[0], headerTokens[1].getBytes()));
                 }
-                headers.add(new RecordHeader(headerTokens[0], headerTokens[1].getBytes()));
             }
 
             byte[] payload = null;
