@@ -37,6 +37,9 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
+
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -70,6 +73,7 @@ public class ProducerPerformance {
             boolean shouldPrintMetrics = res.getBoolean("printMetrics");
             long transactionDurationMs = res.getLong("transactionDurationMs");
             boolean transactionsEnabled =  0 < transactionDurationMs;
+            List<String> headersList = res.getList("headers");
 
             // since default value gets printed with the help text, we are escaping \n there and replacing it with correct value here.
             String payloadDelimiter = res.getString("payloadDelimiter").equals("\\n") ? "\n" : res.getString("payloadDelimiter");
@@ -88,6 +92,15 @@ public class ProducerPerformance {
                 producer.initTransactions();
 
             /* setup perf test */
+            List<Header> headers = new ArrayList<>();
+            for(String headerString : headersList) {
+                String[] headerTokens = headerString.split("[\\s=]+", 2);
+                if(headerTokens.length < 2) {
+                    throw new IllegalArgumentException("invalid headers provided");
+                }
+                headers.add(new RecordHeader(headerTokens[0], headerTokens[1].getBytes()));
+            }
+
             byte[] payload = null;
             if (recordSize != null) {
                 payload = new byte[recordSize];
@@ -111,7 +124,7 @@ public class ProducerPerformance {
                     transactionStartTime = System.currentTimeMillis();
                 }
 
-                record = new ProducerRecord<>(topicName, payload);
+                record = new ProducerRecord<>(topicName, null, null, null, payload, headers);
 
                 long sendStartMs = System.currentTimeMillis();
                 cb = new PerfCallback(sendStartMs, payload.length, stats);
@@ -269,6 +282,14 @@ public class ProducerPerformance {
                 .help("file to read the message payloads from. This works only for UTF-8 encoded text files. " +
                         "Payloads will be read from this file and a payload will be randomly selected when sending messages. " +
                         "Note that you must provide exactly one of --record-size or --payload-file.");
+
+        parser.addArgument("--headers")
+                 .nargs("+")
+                 .required(false)
+                 .metavar("HEADER-NAME=HEADER-VALUE")
+                 .type(String.class)
+                 .dest("headers")
+                 .help("Headers to be included with requests");
 
         parser.addArgument("--payload-delimiter")
                 .action(store())
