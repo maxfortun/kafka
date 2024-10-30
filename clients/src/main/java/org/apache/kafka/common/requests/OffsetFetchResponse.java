@@ -27,7 +27,6 @@ import org.apache.kafka.common.message.OffsetFetchResponseData.OffsetFetchRespon
 import org.apache.kafka.common.message.OffsetFetchResponseData.OffsetFetchResponseTopic;
 import org.apache.kafka.common.message.OffsetFetchResponseData.OffsetFetchResponseTopics;
 import org.apache.kafka.common.protocol.ApiKeys;
-import org.apache.kafka.common.protocol.ByteBufferAccessor;
 import org.apache.kafka.common.protocol.Errors;
 
 import java.nio.ByteBuffer;
@@ -74,6 +73,8 @@ public class OffsetFetchResponse extends AbstractResponse {
     private final OffsetFetchResponseData data;
     private final Errors error;
     private final Map<String, Errors> groupLevelErrors = new HashMap<>();
+
+    private static OffsetFetchResponseParser offsetFetchResponseParser = OffsetFetchResponseParserFactory.getOffsetFetchResponseParser();
 
     public static final class PartitionData {
         public final long offset;
@@ -391,7 +392,7 @@ public class OffsetFetchResponse extends AbstractResponse {
     }
 
     public static OffsetFetchResponse parse(ByteBuffer buffer, short version) {
-        return new OffsetFetchResponse(new OffsetFetchResponseData(new ByteBufferAccessor(buffer), version), version);
+        return offsetFetchResponseParser.parse(buffer, version);
     }
 
     @Override
