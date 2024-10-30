@@ -22,7 +22,6 @@ import org.apache.kafka.common.TopicIdPartition;
 import org.apache.kafka.common.Uuid;
 import org.apache.kafka.common.message.FetchResponseData;
 import org.apache.kafka.common.protocol.ApiKeys;
-import org.apache.kafka.common.protocol.ByteBufferAccessor;
 import org.apache.kafka.common.protocol.Errors;
 import org.apache.kafka.common.protocol.ObjectSerializationCache;
 import org.apache.kafka.common.record.MemoryRecords;
@@ -75,6 +74,8 @@ public class FetchResponse extends AbstractResponse {
     private final FetchResponseData data;
     // we build responseData when needed.
     private volatile LinkedHashMap<TopicPartition, FetchResponseData.PartitionData> responseData = null;
+
+    private static FetchResponseParser fetchResponseParser = FetchResponseParserFactory.getFetchResponseParser();
 
     @Override
     public FetchResponseData data() {
@@ -151,7 +152,7 @@ public class FetchResponse extends AbstractResponse {
     }
 
     public static FetchResponse parse(ByteBuffer buffer, short version) {
-        return new FetchResponse(new FetchResponseData(new ByteBufferAccessor(buffer), version));
+        return fetchResponseParser.parse(buffer, version);
     }
 
     // Fetch versions 13 and above should have topic IDs for all topics.
