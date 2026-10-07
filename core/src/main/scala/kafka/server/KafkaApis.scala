@@ -635,6 +635,12 @@ class KafkaApis(val requestChannel: RequestChannel,
       val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses ++ invalidRequestResponses
       var errorInResponse = false
 
+      // Records are appended and acks satisfied; let plugins see the assigned offsets. Must never break the response.
+      try KafkaApis.produceResponseListener.onProduceResponse(produceRequest, mergedResponseStatus.asJava)
+      catch {
+        case e: Throwable => warn(s"ProduceResponseListener failed for produce request with correlation id ${request.header.correlationId}", e)
+      }
+
       val nodeEndpoints = new mutable.HashMap[Int, Node]
       mergedResponseStatus.forKeyValue { (topicPartition, status) =>
         if (status.error != Errors.NONE) {
@@ -3916,6 +3922,8 @@ class KafkaApis(val requestChannel: RequestChannel,
 }
 
 object KafkaApis {
+  private[server] val produceResponseListener: ProduceResponseListener = ProduceResponseListenerFactory.getProduceResponseListener()
+
   // Traffic from both in-sync and out of sync replicas are accounted for in replication quota to ensure total replication
   // traffic doesn't exceed quota.
   // TODO: remove resolvedResponseData method when sizeOf can take a data object.
