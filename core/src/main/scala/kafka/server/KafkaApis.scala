@@ -121,6 +121,7 @@ class KafkaApis(val requestChannel: RequestChannel,
   val aclApis = new AclApis(authHelper, authorizer, requestHelper, "broker", config)
   val configManager = new ConfigAdminManager(brokerId, config, configRepository)
   val produceRequestInterceptor: ProduceRequestInterceptor = ProduceRequestInterceptorFactory.getProduceRequestInterceptor()
+  val produceResponseInterceptor: ProduceResponseInterceptor = ProduceResponseInterceptorFactory.getProduceResponseInterceptor()
 
   def close(): Unit = {
     aclApis.close()
@@ -646,6 +647,15 @@ class KafkaApis(val requestChannel: RequestChannel,
     @nowarn("cat=deprecation")
     def sendResponseCallback(responseStatus: Map[TopicPartition, PartitionResponse]): Unit = {
       val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses ++ invalidRequestResponses ++ interceptorErrors
+
+      // Call the response interceptor with the successful responses (those that were actually written)
+      try {
+        produceResponseInterceptor.onAppend(interceptedData, responseStatus.asJava, request.header.apiVersion)
+      } catch {
+        case e: Exception =>
+          warn(s"ProduceResponseInterceptor.onAppend failed", e)
+      }
+
       var errorInResponse = false
 
       val nodeEndpoints = new mutable.HashMap[Int, Node]
