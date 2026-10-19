@@ -120,6 +120,7 @@ class KafkaApis(val requestChannel: RequestChannel,
   val requestHelper = new RequestHandlerHelper(requestChannel, quotas, time)
   val aclApis = new AclApis(authHelper, authorizer, requestHelper, "broker", config)
   val configManager = new ConfigAdminManager(brokerId, config, configRepository)
+  val produceRequestInterceptor: ProduceRequestInterceptor = ProduceRequestInterceptorFactory.getProduceRequestInterceptor()
 
   def close(): Unit = {
     aclApis.close()
@@ -598,32 +599,44 @@ class KafkaApis(val requestChannel: RequestChannel,
       }
     }
 
+    // Run the interceptor to transform records and/or signal per-partition errors
+    val interceptResult = produceRequestInterceptor.intercept(produceRequest.data(), request.header.apiVersion)
+    val interceptedData = interceptResult.data()
+    val interceptorErrors = interceptResult.partitionErrors().asScala.map { case (tp, err) =>
+      tp -> new PartitionResponse(err)
+    }.toMap
+
     val unauthorizedTopicResponses = mutable.Map[TopicPartition, PartitionResponse]()
     val nonExistingTopicResponses = mutable.Map[TopicPartition, PartitionResponse]()
     val invalidRequestResponses = mutable.Map[TopicPartition, PartitionResponse]()
     val authorizedRequestInfo = mutable.Map[TopicPartition, MemoryRecords]()
     // cache the result to avoid redundant authorization calls
     val authorizedTopics = authHelper.filterByAuthorized(request.context, WRITE, TOPIC,
-      produceRequest.data().topicData().asScala)(_.name())
+      interceptedData.topicData().asScala)(_.name())
 
-    produceRequest.data.topicData.forEach(topic => topic.partitionData.forEach { partition =>
+    interceptedData.topicData.forEach(topic => topic.partitionData.forEach { partition =>
       val topicPartition = new TopicPartition(topic.name, partition.index)
-      // This caller assumes the type is MemoryRecords and that is true on current serialization
-      // We cast the type to avoid causing big change to code base.
-      // https://issues.apache.org/jira/browse/KAFKA-10698
-      val memoryRecords = partition.records.asInstanceOf[MemoryRecords]
-      if (!authorizedTopics.contains(topicPartition.topic))
-        unauthorizedTopicResponses += topicPartition -> new PartitionResponse(Errors.TOPIC_AUTHORIZATION_FAILED)
-      else if (!metadataCache.contains(topicPartition))
-        nonExistingTopicResponses += topicPartition -> new PartitionResponse(Errors.UNKNOWN_TOPIC_OR_PARTITION)
-      else
-        try {
-          ProduceRequest.validateRecords(request.header.apiVersion, memoryRecords)
-          authorizedRequestInfo += (topicPartition -> memoryRecords)
-        } catch {
-          case e: ApiException =>
-            invalidRequestResponses += topicPartition -> new PartitionResponse(Errors.forException(e))
-        }
+      // Skip partitions that the interceptor already flagged with an error
+      if (interceptorErrors.contains(topicPartition)) {
+        // Already handled by interceptor
+      } else {
+        // This caller assumes the type is MemoryRecords and that is true on current serialization
+        // We cast the type to avoid causing big change to code base.
+        // https://issues.apache.org/jira/browse/KAFKA-10698
+        val memoryRecords = partition.records.asInstanceOf[MemoryRecords]
+        if (!authorizedTopics.contains(topicPartition.topic))
+          unauthorizedTopicResponses += topicPartition -> new PartitionResponse(Errors.TOPIC_AUTHORIZATION_FAILED)
+        else if (!metadataCache.contains(topicPartition))
+          nonExistingTopicResponses += topicPartition -> new PartitionResponse(Errors.UNKNOWN_TOPIC_OR_PARTITION)
+        else
+          try {
+            ProduceRequest.validateRecords(request.header.apiVersion, memoryRecords)
+            authorizedRequestInfo += (topicPartition -> memoryRecords)
+          } catch {
+            case e: ApiException =>
+              invalidRequestResponses += topicPartition -> new PartitionResponse(Errors.forException(e))
+          }
+      }
     })
 
     // the callback for sending a produce response
@@ -632,7 +645,7 @@ class KafkaApis(val requestChannel: RequestChannel,
     // https://issues.apache.org/jira/browse/KAFKA-10730
     @nowarn("cat=deprecation")
     def sendResponseCallback(responseStatus: Map[TopicPartition, PartitionResponse]): Unit = {
-      val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses ++ invalidRequestResponses
+      val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses ++ invalidRequestResponses ++ interceptorErrors
       var errorInResponse = false
 
       val nodeEndpoints = new mutable.HashMap[Int, Node]
