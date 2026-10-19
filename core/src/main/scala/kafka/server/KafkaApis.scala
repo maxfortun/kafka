@@ -600,6 +600,11 @@ class KafkaApis(val requestChannel: RequestChannel,
       }
     }
 
+    // The interceptor may add partitions (e.g. a dead letter topic). Clients fail on responses for partitions they did not send.
+    val requestedPartitions = produceRequest.data.topicData.asScala.flatMap { topic =>
+      topic.partitionData.asScala.map(partition => new TopicPartition(topic.name, partition.index))
+    }.toSet
+
     // Run the interceptor to transform records and/or signal per-partition errors
     val interceptResult = produceRequestInterceptor.intercept(produceRequest.data(), request.header.apiVersion)
     val interceptedData = interceptResult.data()
@@ -646,7 +651,12 @@ class KafkaApis(val requestChannel: RequestChannel,
     // https://issues.apache.org/jira/browse/KAFKA-10730
     @nowarn("cat=deprecation")
     def sendResponseCallback(responseStatus: Map[TopicPartition, PartitionResponse]): Unit = {
-      val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses ++ invalidRequestResponses ++ interceptorErrors
+      val (mergedResponseStatus, addedResponseStatus) = (responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses ++
+        invalidRequestResponses ++ interceptorErrors).partition { case (topicPartition, _) => requestedPartitions.contains(topicPartition) }
+      addedResponseStatus.forKeyValue { (topicPartition, status) =>
+        if (status.error != Errors.NONE)
+          warn(s"Produce to interceptor-added partition $topicPartition failed with ${status.error.exceptionName}")
+      }
 
       // Call the response interceptor with the successful responses (those that were actually written)
       try {
